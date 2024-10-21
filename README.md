@@ -43,8 +43,6 @@ src
 │       └── model
 │           ├── Board.java          # Manages the chessboard, pieces, and movement logic
 │           └── Piece.java          # Represents individual pieces and their properties
-└── resources
-    └── README.md                   # Documentation (this file)
 ```
 
 ### Classes Overview
