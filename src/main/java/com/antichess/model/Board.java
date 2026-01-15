@@ -12,13 +12,11 @@ public class Board {
     }
 
     private void setupBoard() {
-        // Set up pawns
         for (int col = 0; col < 8; col++) {
             grid[1][col] = new Piece("white", "♙", "pawn");
             grid[6][col] = new Piece("black", "♟", "pawn");
         }
 
-        // Set up other pieces
         String[] pieceOrder = {"rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook"};
         String[] whiteSymbols = {"♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"};
         String[] blackSymbols = {"♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"};
@@ -32,17 +30,16 @@ public class Board {
     public void display() {
     System.out.println("   A   B   C   D   E   F   G   H");
     for (int row = 7; row >= 0; row--) {
-        System.out.printf("%d  ", row + 1); // Print row number with padding
+        System.out.printf("%d  ", row + 1);
         for (int col = 0; col < 8; col++) {
             Piece piece = grid[row][col];
             if (piece != null) {
-                System.out.printf(" %s  ", piece); // Each piece gets uniform space
+                System.out.printf(" %s  ", piece);
             } else {
-                // Uniform space for empty squares
                 System.out.printf(" %s  ", ((row + col) % 2 == 0) ? "·" : "□");
             }
         }
-        System.out.printf(" %d\n", row + 1); // Print row number at the end
+        System.out.printf(" %d\n", row + 1);
     }
     System.out.println("   A   B   C   D   E   F   G   H");
 }
@@ -63,18 +60,15 @@ public class Board {
             return false;
         }
 
-        // Check if the move is within the board
         if (endRow < 0 || endRow > 7 || endCol < 0 || endCol > 7) {
             return false;
         }
 
-        // Check if the destination is not occupied by a piece of the same color
         Piece destPiece = getPiece(endRow, endCol);
         if (destPiece != null && destPiece.getColor().equals(currentPlayer)) {
             return false;
         }
 
-        // Validate move based on piece type
         switch (piece.getType()) {
             case "pawn":
                 return isValidPawnMove(startRow, startCol, endRow, endCol, currentPlayer);
@@ -97,19 +91,17 @@ public class Board {
         int direction = currentPlayer.equals("white") ? 1 : -1;
         int moveDistance = endRow - startRow;
 
-        // Move forward
         if (startCol == endCol && getPiece(endRow, endCol) == null) {
             if (moveDistance == direction) {
                 return true;
             }
-            // First move can be two squares
+
             if ((startRow == 1 && currentPlayer.equals("white") && moveDistance == 2) ||
                 (startRow == 6 && currentPlayer.equals("black") && moveDistance == -2)) {
                 return getPiece(startRow + direction, startCol) == null;
             }
         }
 
-        // Capture diagonally
         return Math.abs(startCol - endCol) == 1 && moveDistance == direction && getPiece(endRow, endCol) != null;
     }
 
@@ -192,6 +184,8 @@ public class Board {
 
     public List<String> getValidMoves(String player) {
         List<String> validMoves = new ArrayList<>();
+        boolean forceCapture = hasCaptures(player);
+
         for (int startRow = 0; startRow < 8; startRow++) {
             for (int startCol = 0; startCol < 8; startCol++) {
                 Piece piece = getPiece(startRow, startCol);
@@ -199,9 +193,15 @@ public class Board {
                     for (int endRow = 0; endRow < 8; endRow++) {
                         for (int endCol = 0; endCol < 8; endCol++) {
                             if (isValidMove(startRow, startCol, endRow, endCol, player)) {
-                                validMoves.add(String.format("%c%d %c%d",
-                                    (char)('A' + startCol), startRow + 1,
-                                    (char)('A' + endCol), endRow + 1));
+                                Piece targetPiece = getPiece(endRow, endCol);
+
+                                if (forceCapture) {
+                                    if (targetPiece != null) {
+                                        validMoves.add(formatMove(startCol, startRow, endCol, endRow));
+                                    }
+                                } else {
+                                    validMoves.add(formatMove(startCol, startRow, endCol, endRow));
+                                }
                             }
                         }
                     }
@@ -209,5 +209,9 @@ public class Board {
             }
         }
         return validMoves;
+    }
+
+    private String formatMove(int sc, int sr, int ec, int er) {
+        return String.format("%c%d %c%d", (char)('A' + sc), sr + 1, (char)('A' + ec), er + 1);
     }
 }
