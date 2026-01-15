@@ -60,10 +60,5 @@ jobs:
     # 7. SCA – Dependency Check
     # ----------------------------------------------------
     - name: OWASP Dependency Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: "maven-app"
-        path: "."
-        format: "HTML"
-        out: "reports"
+      run: mvn org.owasp:dependency-check-maven:check
       continue-on-error: true
