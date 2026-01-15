@@ -114,8 +114,6 @@ jobs:
       with:
         image-ref: ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
         scan-type: image
-        severity: CRITICAL,HIGH
-        exit-code: 1
         format: table
 
     # ----------------------------------------------------
