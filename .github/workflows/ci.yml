@@ -37,8 +37,14 @@ jobs:
         run: mvn checkstyle:check
         continue-on-error: true
 
-         # ----------------------------------------------------
-      # 4. SAST – CodeQL
+      # ----------------------------------------------------
+      # 4. Build
+      # ----------------------------------------------------
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+      
+      # ----------------------------------------------------
+      # 5. SAST – CodeQL
       # ----------------------------------------------------
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -50,17 +56,17 @@ jobs:
   
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
-  
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
 
       # ----------------------------------------------------
-      # 5. SCA – Dependency Vulnerability Scan
+      # 6. SCA – Dependency Vulnerability Scan
       # ----------------------------------------------------
       - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: ""
         with:
           project: "maven-app"
           path: "."
           format: "HTML"
+          out: "reports"
         continue-on-error: true
