@@ -53,3 +53,14 @@ jobs:
   
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+
+      # ----------------------------------------------------
+      # 5. SCA – Dependency Vulnerability Scan
+      # ----------------------------------------------------
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "maven-app"
+          path: "."
+          format: "HTML"
+        continue-on-error: true
