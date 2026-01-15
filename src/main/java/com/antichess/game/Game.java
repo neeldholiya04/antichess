@@ -99,6 +99,12 @@ public class Game {
             }
 
             System.out.print("Enter 'move A2 B4', 'display', 'hint', or 'quit': ");
+
+            if (!scanner.hasNextLine()) {
+                System.out.println("\nNo input detected. Exiting...");
+                break;
+            }
+
             String action = scanner.nextLine().toLowerCase();
 
             if (action.equals("quit")) {

@@ -32,4 +32,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD pgrep -f java || exit 1
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/antichess.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/antichess.jar"]
