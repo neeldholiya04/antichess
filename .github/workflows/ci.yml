@@ -101,7 +101,53 @@ jobs:
       run: mvn versions:set -DnewVersion=${{ steps.version.outputs.version }}
 
     # ----------------------------------------------------
-    # 11. Docker Login
+    # 11. Build Docker Image
+    # ----------------------------------------------------
+    - name: Build Docker image
+      run: |
+        docker build \
+          -t $IMAGE_NAME:${{ steps.version.outputs.version }} \
+          -t $IMAGE_NAME:latest .
+
+    # ----------------------------------------------------
+    # 12. Test Docker Image
+    # ----------------------------------------------------
+    - name: Test Docker image runs
+      run: |
+        docker run --rm $IMAGE_NAME:${{ steps.version.outputs.version }} --help
+
+    # ----------------------------------------------------
+    # 13. Scan Docker Image with Trivy 
+    # ----------------------------------------------------
+    - name: Trivy image scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: $IMAGE_NAME:${{ steps.version.outputs.version }}
+        scan-type: image
+        severity: CRITICAL,HIGH
+        exit-code: 1
+        format: table
+
+    # ----------------------------------------------------
+    # 14. Sign Docker Image with Cosign
+    # ----------------------------------------------------
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3
+
+    - name: Sign Docker image
+      run: |
+        cosign sign $IMAGE_NAME:${{ steps.version.outputs.version }}
+
+    # ----------------------------------------------------
+    # 15. Tag Docker Image for Docker Hub
+    # ----------------------------------------------------
+    - name: Tag image for Docker Hub
+      run: |
+        docker tag $IMAGE_NAME:${{ steps.version.outputs.version }} $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${{ steps.version.outputs.version }}
+        docker tag $IMAGE_NAME:${{ steps.version.outputs.version }} $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest
+
+    # ----------------------------------------------------
+    # 16. Login to Docker Hub
     # ----------------------------------------------------
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -110,50 +156,9 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     # ----------------------------------------------------
-    # 12. Build Docker Image
-    # ----------------------------------------------------
-    - name: Build Docker image
-      run: |
-        docker build \
-          -t $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${{ steps.version.outputs.version }} \
-          -t $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest \
-          .
-
-    # ----------------------------------------------------
-    # 13. Test Docker Image
-    # ----------------------------------------------------
-    - name: Test Docker image runs
-      run: |
-        docker run --rm \
-          $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${{ steps.version.outputs.version }} \
-          --help || true
-
-    # ----------------------------------------------------
-    # 14. Scan Image with Trivy
-    # ----------------------------------------------------
-    - name: Trivy image scan
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-        severity: CRITICAL,HIGH
-        exit-code: 1
-        format: table
-
-    # ----------------------------------------------------
-    # 15. Push Docker Image
+    # 17. Push Docker Image
     # ----------------------------------------------------
     - name: Push Docker image
       run: |
         docker push $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${{ steps.version.outputs.version }}
         docker push $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest
-
-    # ----------------------------------------------------
-    # 16. Sign Image
-    # ----------------------------------------------------
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@v3
-
-    - name: Sign Docker image
-      run: |
-        cosign sign \
-          $REGISTRY/${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${{ steps.version.outputs.version }}
