@@ -105,7 +105,7 @@ jobs:
     - name: Test Docker image runs
       run: |
         run: |
-          echo "display\nquit" | docker run --rm antichess:${{ steps.version.outputs.version }}
+          echo "quit" | docker run --rm antichess:${{ steps.version.outputs.version }}
 
     # ----------------------------------------------------
     # 12. Scan Docker Image with Trivy 
