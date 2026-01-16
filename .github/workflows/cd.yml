@@ -37,7 +37,8 @@ jobs:
           docker.io/${{ secrets.DOCKERHUB_USERNAME }}/antichess:latest
 
       - name: Deploy to Kubernetes
-        run: kubectl apply -f k8s/
+        run: sed -i "s|<DOCKERHUB_USERNAME>|${{ secrets.DOCKERHUB_USERNAME }}|g" k8s/deployment.yaml
+            kubectl apply -f k8s/deployment.yaml
 
       - name: Verify Rollout
         run: kubectl rollout status deployment/antichess-cli
