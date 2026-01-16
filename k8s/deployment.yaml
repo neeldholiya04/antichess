@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: antichess-cli
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: antichess
+  template:
+    metadata:
+      labels:
+        app: antichess
+    spec:
+      containers:
+        - name: antichess
+          image: docker.io/<DOCKERHUB_USERNAME>/antichess:latest
+          stdin: true
+          tty: true
