@@ -31,7 +31,10 @@ jobs:
 
       - name: Verify Image Signature
         run: |
-          cosign verify docker.io/${{ secrets.DOCKERHUB_USERNAME }}/antichess:latest
+          cosign verify \
+          --certificate-identity-regexp "https://github.com/neeldholiya04/antichess/.github/workflows/ci.yml@refs/heads/main" \
+          --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \ 
+          docker.io/${{ secrets.DOCKERHUB_USERNAME }}/antichess:latest
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f k8s/
