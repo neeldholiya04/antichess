@@ -1,98 +1,197 @@
-# AntiChess Game
+# Antichess – DevSecOps CI/CD Project
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Game Features](#game-features)
-- [Gameplay Rules](#gameplay-rules)
-- [Project Structure](#project-structure)
-- [Classes Overview](#classes-overview)
-- [How to Run](#how-to-run)
-- [How to Play](#how-to-play)
+## 1. Problem Background & Motivation
+Modern CI/CD pipelines often focus only on making builds pass, while ignoring security, provenance, and deployment safety.  
+This project was built to demonstrate a **production-grade DevSecOps CI/CD pipeline**, where:
+- Security is shifted left
+- Artifacts are immutable and trusted
+- CI and CD responsibilities are clearly separated
+- Kubernetes is used correctly even for non-HTTP workloads
 
-## Introduction
-AntiChess is a variant of chess where the goal is to lose all your pieces instead of winning by checkmating the opponent. The game forces you to make captures when possible, which adds a strategic twist to the traditional chess mechanics.
+The motivation is to design a pipeline that reflects **real-world industry practices**, not just tool usage.
 
-This Java-based project simulates the AntiChess game, allowing two players to play against each other in the console. The game follows standard chess piece movements with the additional anti-chess rules applied.
+---
 
-## Game Features
-- Full implementation of AntiChess rules, where the objective is to lose all pieces.
-- Custom chessboard display using Unicode symbols.
-- Supports all standard chess piece moves (pawns, rooks, knights, bishops, queens, kings).
-- Enforces mandatory captures when available.
-- Detects game over conditions such as a player having no valid moves or losing all pieces.
-- Provides hints for valid moves during the game.
+## 2. Application Overview
+**Antichess** is a Java-based interactive CLI game (Suicide Chess):
+- Runs continuously and waits for terminal input
+- No HTTP server or exposed ports
+- Users interact via STDIN/STDOUT
+- Suitable for demonstrating Kubernetes workloads beyond web services
 
-## Gameplay Rules
-- Each player takes turns moving one of their pieces.
-- When a player can capture an opponent’s piece, the capture is mandatory.
-- The game ends when a player either:
-  - Loses all their pieces (they win).
-  - Has no valid moves left (they lose).
+**Tech Stack**
+- Java 21
+- Maven
+- Docker
+- GitHub Actions
+- Kubernetes (kind on VM)
 
-## Project Structure
+---
 
-The project consists of the following packages and classes:
+## 3. CI/CD Workflow Diagram
+High-level flow:
 
-```bash
-src
-├── com
-│   └── antichess
-│       ├── App.java               # Main entry point of the game
-│       ├── game
-│       │   └── Game.java           # Handles game flow, user inputs, and move validation
-│       └── model
-│           ├── Board.java          # Manages the chessboard, pieces, and movement logic
-│           └── Piece.java          # Represents individual pieces and their properties
+```
+Developer Push / Tag
+        |
+        v
+GitHub Actions CI
+  - Linting
+  - SAST (CodeQL)
+  - SCA (OWASP)
+  - Tests
+  - Docker Build
+  - Trivy Scan
+  - Image Signing (Cosign)
+        |
+        v
+DockerHub (Signed Image)
+        |
+        v
+GitHub Actions CD
+  - Image Signature Verification
+  - Kubernetes Deployment
+        |
+        v
+Kubernetes Cluster (kind on VM)
 ```
 
-### Classes Overview
+---
 
-- **App.java**: The main class responsible for launching the game. It instantiates the `Game` class and starts the gameplay loop.
-- **Game.java**: Manages the main game loop, handles player input, switches players, and checks for game-over conditions.
-- **Board.java**: Contains the logic for setting up the board, moving pieces, validating moves, and detecting captures. It also manages the display of the chessboard.
-- **Piece.java**: Represents a chess piece, with properties like color, type (e.g., rook, pawn), and symbol. The `Piece` class defines how each piece behaves and interacts on the board.
+## 4. Security & Quality Controls
 
-## How to Run
+### Code Quality
+- **Checkstyle** enforces coding standards
+- **JUnit tests** validate core chess logic
 
-1. **Clone the Repository:**
-    
-    ```bash
-    git clone https://github.com/neeldholiya04/antichess.git
-    
-    ```
-    
-2. **Compile the Project:**
-Navigate to the project root directory, where `App.java` is located. Run the following command:
-    
-    ```bash
-    javac -d bin src/com/antichess/*.java src/com/antichess/game/*.java src/com/antichess/model/*.java
-    
-    ```
-    
-3. **Run the Game:**
-Once compiled, run the `App` class to start the game:
-    
-    ```bash
-    java -cp bin com.antichess.App
-    
-    ```
-## How to Play
+### DevSecOps Controls
+- **SAST (CodeQL):** Detects insecure coding patterns
+- **SCA (OWASP Dependency Check):** Identifies vulnerable dependencies
+- **Container Scan (Trivy):** Detects OS and library vulnerabilities
+- **Cosign (Keyless Signing):** Ensures artifact provenance
+- **Cosign Verification in CD:** Zero-trust deployment
 
-1. **Start the game**: After running the program, the chessboard will be displayed, and it will prompt the current player (White or Black) to make a move.
-2. **Enter commands**: Players can enter one of the following commands:
-    - `move A2 B3`: Move a piece from position A2 to B3.
-    - `display`: Re-display the current state of the chessboard.
-    - `hint`: Display all valid moves for the current player.
-    - `quit`: Quit the game.
-3. **Move validation**: The game validates whether the move is allowed according to the piece's rules. If there are mandatory captures, the game will not accept non-capturing moves.
-4. **Game end**: The game ends when:
-    - One player has no pieces left (they win).
-    - One player has no valid moves (the other player wins).
-5. **Game Loop**: The game alternates turns between players until one of the above end conditions is met.
+---
 
-### Example Commands
+## 5. Results & Observations
+- CI pipeline consistently produces signed, trusted images
+- Vulnerabilities are detected early in the lifecycle
+- CD deploys only verified artifacts
+- Kubernetes successfully runs a long-lived interactive CLI workload
+- Clear separation between CI (build & secure) and CD (deploy)
 
-- Move a pawn: `move A2 A3`
-- Move a knight: `move B1 C3`
-- Display valid moves: `hint`
-- Quit the game: `quit`
+---
+
+## 6. Limitations & Improvements
+
+### Current Limitations
+- Single environment (staging)
+- Manual interaction via kubectl attach
+- Static Kubernetes manifests
+
+### Future Improvements
+- Helm or Kustomize for templating
+- Multi-environment promotion (staging → prod)
+- Automated rollback on deployment failure
+- Policy enforcement using OPA/Kyverno
+- Centralized logging and monitoring
+
+---
+
+## 7. Final Conclusion
+This project demonstrates that **DevOps is about design decisions, not YAML length**.  
+By integrating security, artifact trust, and Kubernetes deployment for a non-web workload, the pipeline reflects **real production-grade DevSecOps practices**.
+
+---
+
+## 8. Steps to Run the Project Locally
+
+### Prerequisites
+- Java 21
+- Maven
+- Docker
+- kubectl
+- kind
+
+### Build & Run Locally
+```bash
+mvn clean package
+java -jar target/antichess.jar
+```
+
+### Build Docker Image
+```bash
+docker build -t antichess:local .
+docker run -it antichess:local
+```
+
+---
+
+## 9. Kubernetes Deployment (kind)
+
+### Create Cluster
+```bash
+kind create cluster --name antichess
+```
+
+### Deploy Application
+```bash
+kubectl apply -f k8s/deployment.yaml
+```
+
+### Access Game
+```bash
+kubectl get pods
+kubectl attach -it <pod-name>
+```
+
+---
+
+## 10. Secrets Configuration (GitHub)
+
+The following GitHub Secrets must be configured:
+
+| Secret Name | Purpose |
+|------------|---------|
+| DOCKERHUB_USERNAME | DockerHub username |
+| DOCKERHUB_TOKEN | DockerHub access token |
+| KUBECONFIG | Base64-encoded kubeconfig for cluster |
+
+⚠️ Secrets are **never hardcoded**.
+
+---
+
+## 11. CI Explanation
+
+### CI Responsibilities
+- Build application
+- Run quality & security checks
+- Create Docker image
+- Scan image for vulnerabilities
+- Push image to registry
+- Sign image cryptographically
+
+### CD Responsibilities
+- Verify image signature
+- Deploy to Kubernetes
+- Validate rollout
+
+This follows the principle:
+> **Build once, deploy many times**
+
+---
+
+## Repository Structure
+
+```
+.
+├── .github/workflows
+│   ├── ci.yml
+│   └── cd.yml
+├── k8s
+│   └── deployment.yaml
+├── src
+├── Dockerfile
+├── pom.xml
+└── README.md
+```
