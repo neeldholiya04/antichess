@@ -56,7 +56,7 @@ jobs:
     # 5. Build JAR
     # ----------------------------------------------------
     - name: Build with Maven
-      run: mvn clean package -DskipTests -B
+      run: mvn clean package -B
 
     # ----------------------------------------------------
     # 6. CodeQL Analysis
